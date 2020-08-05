@@ -33,6 +33,45 @@ typedef   double f64;
 #define SIGN(a)  ((a) >  0  ?  1  :  ((a) < 0 ? -1 : 0))
 #define CLAMP(a, min, max) MIN((max), MAX((min), (a)))
 
+internal u64
+U64ChangeEndianess(u64 Value)
+{
+	u64 Result = 0;
+	Result = 
+		((Value & 0xFF00000000000000) >> 56) |
+		((Value & 0x00FF000000000000) >> 40) |
+		((Value & 0x0000FF0000000000) >> 24) |
+		((Value & 0x000000FF00000000) >>  8) |
+		((Value & 0x00000000FF000000) <<  8) |
+		((Value & 0x0000000000FF0000) << 24) |
+		((Value & 0x000000000000FF00) << 40) |
+		((Value & 0x00000000000000FF) << 56);
+	return (Result);
+}
+
+internal u32
+U32ChangeEndianess(u32 Value)
+{
+	u32 Result = 0;
+	Result = 
+		((Value & 0xFF000000) >> 24) |
+		((Value & 0x00FF0000) >>  8) |
+		((Value & 0x0000FF00) <<  8) |
+		((Value & 0x000000FF) << 24);
+	return (Result);
+}
+
+internal u16
+U16ChangeEndianess(u16 Value)
+{
+	u16 Result = 0;
+	Result = 
+		(u16)((Value & 0xFF00) >> 8) |
+		(u16)((Value & 0x00FF) << 8);
+	return (Result);
+}
+
+
 
 internal u32
 StringLength(char *String)
