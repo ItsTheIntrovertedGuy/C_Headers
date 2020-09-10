@@ -71,7 +71,27 @@ U16ChangeEndianess(u16 Value)
 	return (Result);
 }
 
+internal char
+CharToUpperIfIsLetter(char Character)
+{
+	char Result = Character;
+	if (Character >= 'a' && Character <= 'z')
+	{
+		Result = Character - 32;
+	}
+	return (Result);
+}
 
+internal char
+CharToLowerIfIsLetter(char Character)
+{
+	char Result = Character;
+	if (Character >= 'A' && Character <= 'Z')
+	{
+		Result = Character + 32;
+	}
+	return (Result);
+}
 
 internal u32
 StringLength(char *String)
@@ -79,6 +99,20 @@ StringLength(char *String)
 	u32 Length = 0;
 	for (; String[Length] != 0; ++Length) { }
 	return (Length);
+}
+
+internal b32
+StringEqual(char *A, char *B)
+{
+	i32 Index = 0;
+	for (; 
+		 A[Index] == B[Index] && A[Index] != 0 && B[Index] != 0;
+		++Index)
+	{
+		// noop
+	}
+	
+	return (A[Index] == B[Index]);
 }
 
 internal char *
