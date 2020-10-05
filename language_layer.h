@@ -93,6 +93,14 @@ CharToLowerIfIsLetter(char Character)
 	return (Result);
 }
 
+internal b32
+CharIsAsciiControlCharacter(char Character)
+{
+	u8 CharInDecimal = (u8)Character;
+	b32 IsControlCharacter = (CharInDecimal <= 31) || (CharInDecimal == 127);
+	return (IsControlCharacter);
+}
+
 internal u32
 StringLength(char *String)
 {
@@ -113,6 +121,59 @@ StringEqual(char *A, char *B)
 	}
 	
 	return (A[Index] == B[Index]);
+}
+
+internal char *
+StringContains(char *StringToSearchWithin, char *SearchTerm, b32 IsCaseSensitive)
+{
+	Assert(StringToSearchWithin);
+	Assert(SearchTerm);
+
+	u32 StringToSearchWithinLength = StringLength(StringToSearchWithin);
+	u32 SearchTermLength = StringLength(SearchTerm);
+	char *SearchTermWithinStringToSearch = 0;
+
+	for (u32 CharIndex = 0; 
+		 CharIndex+SearchTermLength < StringToSearchWithinLength+1; 
+		 ++CharIndex)
+	{
+		u32 MatchingCharsCount = 0;
+		for (; MatchingCharsCount < SearchTermLength; ++MatchingCharsCount)
+		{
+			char StringToSearchCharToCompare = StringToSearchWithin[CharIndex + MatchingCharsCount];
+			char SearchTermCharToCompare = SearchTerm[MatchingCharsCount];
+			if (0 == IsCaseSensitive)
+			{
+				StringToSearchCharToCompare = CharToLowerIfIsLetter(StringToSearchCharToCompare);
+				SearchTermCharToCompare = CharToLowerIfIsLetter(SearchTermCharToCompare);
+			}
+
+			if (StringToSearchCharToCompare != SearchTermCharToCompare)
+			{
+				break;
+			}
+		}
+
+		if (MatchingCharsCount == SearchTermLength)
+		{
+			SearchTermWithinStringToSearch = &StringToSearchWithin[CharIndex];
+			break;
+		}
+	}
+
+	return (SearchTermWithinStringToSearch);
+}
+
+internal char *
+StringContainsCaseSensitive(char *String, char *SearchTerm)
+{
+	return (StringContains(String, SearchTerm, 1));
+}
+
+internal char *
+StringContainsCaseInsensitive(char *String, char *SearchTerm)
+{
+	return (StringContains(String, SearchTerm, 0));
 }
 
 internal char *
