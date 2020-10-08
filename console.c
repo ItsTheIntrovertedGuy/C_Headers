@@ -16,6 +16,7 @@
 
 	// NOTE(Felix): Set signal so a CTRL-C restores console settings
 	// Calls (custom) function internal void SignalSIGINTHandler(int Signal)
+	// needs <signal.h>
 	{
 		struct sigaction SignalAction = { 0 };
 		SignalAction.sa_handler = &SignalSIGINTHandler;
@@ -24,6 +25,7 @@
 	
 	// NOTE(Felix): Handle resize signal so we can reformat the window
 	// Calls (custom) function internal void SignalSIGWINCHHandler(int Signal)
+	// needs <signal.h>
 	{
 		struct sigaction SignalAction = { 0 };
 		SignalAction.sa_handler = &SignalSIGWINCHHandler;
@@ -37,31 +39,32 @@
 		TerminalSettings.c_lflag &= (tcflag_t)~ICANON;
 		tcsetattr(STDIN_FILENO, TCSANOW, &TerminalSettings);
 	}
+}
 	
-	// NOTE(Felix): Polling of input
-	while (1)
+// NOTE(Felix): Polling of input
+// needs <poll.h>
+while (1)
+{
+	struct pollfd PollRequest = { 0 };
+	PollRequest.fd = STDIN_FILENO;
+	PollRequest.events = POLLIN;
+
+	// NOTE(Felix): Wait for either
+	//  - Input
+	//  - Interrupt of any kind (including resizing of console)
+	poll(&PollRequest, 1, -1);
+
+	if (SomeFlagThatWasSetInAHandler)
 	{
-		struct pollfd PollRequest = { 0 };
-		PollRequest.fd = STDIN_FILENO;
-		PollRequest.events = POLLIN;
-
-		// NOTE(Felix): Wait for either
-		//  - Input
-		//  - Interrupt of any kind (including resizing of console)
-		poll(&PollRequest, 1, -1);
-
-		if (SomeFlagThatWasSetInAHandler)
-		{
-			// Handle stuff
-			...
+		// Handle stuff
+		...
 
 			continue;
-		}
-
-		read(STDIN_FILENO, &InputCharacter, sizeof(InputCharacter));
-
-		...
 	}
+
+	read(STDIN_FILENO, &InputCharacter, sizeof(InputCharacter));
+
+	...
 }
 
 // NOTE(Felix): Functions that may come in handy
@@ -75,7 +78,7 @@ ConsoleSetup(void)
 internal void
 ConsoleCleanup(void)
 {
-	ColorResetToDefault();
+	//ColorResetToDefault();
 	ScreenClear();
 	EchoEnable();
 	CursorShow();

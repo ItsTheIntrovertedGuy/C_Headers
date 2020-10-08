@@ -123,6 +123,20 @@ StringEqual(char *A, char *B)
 	return (A[Index] == B[Index]);
 }
 
+internal b32
+StringStartsWith(char *String, char *StartsWith)
+{
+	i32 Index = 0;
+	for (;
+		 String[Index] == StartsWith[Index] && StartsWith[Index] != 0;
+		 ++Index)
+	{
+		// noop
+	}
+	
+	return (StartsWith[Index] == 0);
+}
+
 internal char *
 StringContains(char *StringToSearchWithin, char *SearchTerm, b32 IsCaseSensitive)
 {
