@@ -111,6 +111,19 @@ U16ChangeEndianess(u16 Value)
 	return (Result);
 }
 
+internal b32
+CharIsLetter(char Char)
+{
+	return ((Char >= 'A' && Char <= 'Z') ||
+			(Char >= 'a' && Char <= 'z'));
+}
+
+internal b32
+CharIsNumber(char Char)
+{
+	return (Char >= '0' && Char <= '9');
+}
+
 internal char
 CharToUpperIfIsLetter(char Character)
 {
@@ -321,6 +334,32 @@ StringParseToNumber(char *Buffer)
 		Result *= -1;
 	}
 	
+	return (Result);
+}
+
+internal u64
+StringParseUnsignedHexadecimal(char *Buffer)
+{
+	Assert(Buffer);
+	u64 Result = 0;
+	for (;;)
+	{
+		char Character = CharToLowerIfIsLetter(*(Buffer++));
+		if (CharIsNumber(Character))
+		{
+			Result <<= 4;
+			Result += (u64)(Character - '0');
+		}
+		else if (Character >= 'a' && Character <= 'f')
+		{
+			Result <<= 4;
+			Result += 10 + (u64)(Character - 'a');
+		}
+		else
+		{
+			break;
+		}
+	}
 	return (Result);
 }
 
