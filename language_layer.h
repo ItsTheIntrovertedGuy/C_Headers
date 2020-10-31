@@ -177,11 +177,20 @@ StringEqual(char *A, char *B)
 }
 
 internal void
+StringCopy(char *Destination, char *ToCopy)
+{
+	while (*ToCopy != 0)
+	{
+		*(Destination++) = *(ToCopy++);
+	}
+	*Destination = 0;
+}
+
+internal void
 StringAppend(char *Destination, char *ToAppend)
 {
 	while (*Destination != 0) { Destination++; }
-	while (*ToAppend != 0) { *(Destination++) = *(ToAppend++); }
-	*Destination = 0;
+	StringCopy(Destination, ToAppend);
 }
 
 internal b32
