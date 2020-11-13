@@ -4,6 +4,7 @@
 #define local_persist static
 #define internal static
 
+
 #include <stdint.h>
 typedef   int8_t  i8;
 typedef  int16_t i16;
@@ -16,6 +17,7 @@ typedef uint64_t u64;
 typedef      i32 b32;
 typedef    float f32;
 typedef   double f64;
+
 
 // TODO(Felix): Proper debug macro
 #define Assert(expression) if (!(expression)) { *(i64 *)0 = 0; }
@@ -31,47 +33,8 @@ typedef   double f64;
 #define MAX(a,b) ((a) > (b) ? (a) :  (b))
 #define ABS(a)   ((a) >  0  ? (a) : -(a))
 #define SIGN(a)  ((a) >  0  ?  1  :  ((a) < 0 ? -1 : 0))
-#define CLAMP(a, min, max) MIN((max), MAX((min), (a)))
+#define CLAMP(a,min,max) MIN((max), MAX((min), (a)))
 
-typedef struct
-{
-	u8 *Memory;
-	u64 BlockSize;
-	u64 BytesAllocated;
-} memory_block;
-
-#ifdef __linux__
-#include <sys/mman.h>
-#endif
-
-internal memory_block
-CreateLinearAllocator(u64 MemoryBlockSize)
-{
-	memory_block Result = { 0 };
-	Result.BlockSize = MemoryBlockSize;
-#ifdef __linux__
-	Result.Memory = mmap(0, Result.BlockSize, PROT_READ|PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);;
-#endif
-	return (Result);
-}
-
-internal void *
-AllocateMemory(memory_block *Memory, u64 BytesToAllocate)
-{
-	Assert(Memory->BlockSize > Memory->BytesAllocated + BytesToAllocate);
-	void *MemoryResult = Memory->Memory + Memory->BytesAllocated;
-	Memory->BytesAllocated += BytesToAllocate;
-	return (MemoryResult);
-}
-
-internal void
-FreeMemoryBlock(memory_block *Memory)
-{
-#ifdef __linux__
-	munmap(Memory->Memory, Memory->BlockSize);
-#endif
-	*Memory = (memory_block) { 0 };
-}
 
 internal u64
 U64ChangeEndianess(u64 Value)
@@ -110,6 +73,7 @@ U16ChangeEndianess(u16 Value)
 		(u16)((Value & 0x00FF) << 8);
 	return (Result);
 }
+
 
 internal b32
 CharIsLetter(char Char)
@@ -153,6 +117,7 @@ CharIsAsciiControlCharacter(char Character)
 	b32 IsControlCharacter = (CharInDecimal <= 31) || (CharInDecimal == 127);
 	return (IsControlCharacter);
 }
+
 
 internal u32
 StringLength(char *String)
@@ -371,6 +336,7 @@ StringParseUnsignedHexadecimal(char *Buffer)
 	}
 	return (Result);
 }
+
 
 internal u32
 ByteCountToBase64CharCount(u32 ByteCount)
