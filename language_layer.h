@@ -74,6 +74,27 @@ U16ChangeEndianess(u16 Value)
 	return (Result);
 }
 
+internal i64
+I64ChangeEndianess(i64 Value)
+{
+	u64 ChangedEndianess = U64ChangeEndianess(*(u64 *)&Value);
+	return (*(i64 *)&ChangedEndianess);
+}
+
+internal i32
+I32ChangeEndianess(i32 Value)
+{
+	u32 ChangedEndianess = U32ChangeEndianess(*(u32 *)&Value);
+	return (*(i32 *)&ChangedEndianess);
+}
+
+internal i16
+I16ChangeEndianess(i16 Value)
+{
+	u16 ChangedEndianess = U16ChangeEndianess(*(u16 *)&Value);
+	return (*(i16 *)&ChangedEndianess);
+}
+
 
 internal b32
 CharIsLetter(char Char)
