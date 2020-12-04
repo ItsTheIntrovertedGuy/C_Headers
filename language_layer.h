@@ -6,17 +6,45 @@
 
 
 #include <stdint.h>
-typedef   int8_t  i8;
-typedef  int16_t i16;
-typedef  int32_t i32;
-typedef  int64_t i64;
-typedef  uint8_t  u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef      i32 b32;
-typedef    float f32;
-typedef   double f64;
+#include <inttypes.h>
+typedef   int8_t    i8;
+typedef  int16_t   i16;
+typedef  int32_t   i32;
+typedef  int64_t   i64;
+typedef  uint8_t    u8;
+typedef uint16_t   u16;
+typedef uint32_t   u32;
+typedef uint64_t   u64;
+typedef      i32   b32;
+typedef    float   f32;
+typedef   double   f64;
+typedef size_t     memory_index;
+typedef uintptr_t  umm;
+typedef intptr_t   imm;
+
+#define PFi8  PRIi8
+#define PFi16 PRIi16
+#define PFi32 PRIi32
+#define PFi64 PRIi64
+#define PFimm PRIiPTR
+
+#define PFu8  PRIu8
+#define PFu16 PRIu16
+#define PFu32 PRIu32
+#define PFu64 PRIu64
+#define PFumm PRIuPTR
+
+#define SFi8  SCNi8
+#define SFi16 SCNi16
+#define SFi32 SCNi32
+#define SFi64 SCNi64
+#define SFimm SCNiPTR
+
+#define SFu8  SCNu8
+#define SFu16 SCNu16
+#define SFu32 SCNu32
+#define SFu64 SCNu64
+#define SFumm SCNuPTR
 
 
 // TODO(Felix): Proper debug macro
@@ -27,6 +55,7 @@ typedef   double f64;
 #define GIBIBYTES(n) ((u64)1024*MEBIBYTES(n))
 #define TEBIBYTES(n) ((u64)1024*GIBIBYTES(n))
 
+#define PI (3.14159265358979323846)
 #define ARRAYCOUNT(Array) (sizeof(Array) / sizeof((Array)[0]))
 
 #define MIN(a,b) ((a) < (b) ? (a) :  (b))
@@ -103,12 +132,6 @@ CharIsLetter(char Char)
 			(Char >= 'a' && Char <= 'z'));
 }
 
-internal b32
-CharIsNumber(char Char)
-{
-	return (Char >= '0' && Char <= '9');
-}
-
 internal char
 CharToUpperIfIsLetter(char Character)
 {
@@ -129,6 +152,33 @@ CharToLowerIfIsLetter(char Character)
 		Result = Character + 32;
 	}
 	return (Result);
+}
+
+
+internal b32
+CharIsDigit(char Char)
+{
+	return (Char >= '0' && Char <= '9');
+}
+
+internal b32
+CharIsHexLowerCase(char Char)
+{
+	return (CharIsDigit(Char) ||
+			('a' <= Char && Char <= 'f'));
+}
+
+internal b32
+CharIsHexUpperCase(char Char)
+{
+	return (CharIsDigit(Char) ||
+			('A' <= Char && Char <= 'F'));
+}
+
+internal b32
+CharIsHex(char Char)
+{
+	return (CharIsHexLowerCase(CharToLowerIfIsLetter(Char)));
 }
 
 internal b32
@@ -340,7 +390,7 @@ StringParseUnsignedHexadecimal(char *Buffer)
 	for (;;)
 	{
 		char Character = CharToLowerIfIsLetter(*(Buffer++));
-		if (CharIsNumber(Character))
+		if (CharIsDigit(Character))
 		{
 			Result <<= 4;
 			Result += (u64)(Character - '0');

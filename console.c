@@ -136,7 +136,7 @@ CursorShow(void)
 }
 
 internal void
-CursorMove(i32 Y, i32 X)
+CursorMoveTo(i32 Y, i32 X)
 {
 	// NOTE(Felix): This function is zero indexed, ANSI escape sequences apparently aren't though
 	printf("\033[%d;%dH", Y+1, X+1);
@@ -151,3 +151,8 @@ ConsoleUpdateDimensions(i32 *ConsoleRows, i32 *ConsoleColumns)
 	*ConsoleColumns = ConsoleDimensions.ws_col;
 }
 
+internal void
+ConsoleMoveCursorUp(i32 LinesToMove)
+{
+	printf("\033[%dA", LinesToMove);
+}
