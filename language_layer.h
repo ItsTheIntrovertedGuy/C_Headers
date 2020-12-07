@@ -138,7 +138,7 @@ CharToUpperIfIsLetter(char Character)
 	char Result = Character;
 	if (Character >= 'a' && Character <= 'z')
 	{
-		Result = Character - 32;
+		Result = (char)(Character - 32);
 	}
 	return (Result);
 }
@@ -149,7 +149,7 @@ CharToLowerIfIsLetter(char Character)
 	char Result = Character;
 	if (Character >= 'A' && Character <= 'Z')
 	{
-		Result = Character + 32;
+		Result = (char)(Character + 32);
 	}
 	return (Result);
 }
