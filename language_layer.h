@@ -62,7 +62,7 @@ typedef intptr_t   imm;
 #define MAX(a,b) ((a) > (b) ? (a) :  (b))
 #define ABS(a)   ((a) >  0  ? (a) : -(a))
 #define SIGN(a)  ((a) >  0  ?  1  :  ((a) < 0 ? -1 : 0))
-#define CLAMP(a,min,max) MIN((max), MAX((min), (a)))
+#define CLAMP(min,a,max) MIN((max), MAX((min), (a)))
 
 
 internal u64
