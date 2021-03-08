@@ -1,7 +1,7 @@
 // TODO(Felix): Maybe replace u8*  with void* after all, as we don't really
 // seem to be doing (Memory++) that often
-// TODO(Felix): Json BFS
 
+#include <ctype.h>
 
 typedef enum 
 { 
@@ -41,6 +41,44 @@ JsonFindDataByNameDepthFirst(simplified_json_object *Object, char *Name)
 		}
 		
 		CurrentObject = CurrentObject->Next;
+	}
+	return (Result);
+}
+
+internal void *
+JsonFindDataByNameBreadthFirst(simplified_json_object *Object, char *Name)
+{
+	assert(Object);
+	simplified_json_object *(QueueBuffer[1024]) = { 0 };
+	umm FilledIndex = 0;
+	umm FreeIndex = 0;
+	for (simplified_json_object *CurrentObject = Object;
+		 0 != CurrentObject;
+		 CurrentObject = CurrentObject->Next)
+	{
+		QueueBuffer[FreeIndex++] = CurrentObject;
+	}
+
+	void *Result = 0;
+	while (FreeIndex != FilledIndex && // Queue not empty
+		   0 == Result)                // Result not yet found
+	{
+		simplified_json_object *CurrentObject = QueueBuffer[FilledIndex++];
+		if (CurrentObject->Name &&
+			0 == strcmp(CurrentObject->Name, Name))
+		{
+			Result = CurrentObject->Data;
+		}
+		else if (CurrentObject->DataType == SIMPLIFIED_JSON_OBJECT_DATA_TYPE_OBJECT_OR_ARRAY)
+		{
+			for (simplified_json_object *ObjectToAdd = CurrentObject->Data;
+				 0 != ObjectToAdd;
+				 ObjectToAdd = ObjectToAdd->Next)
+			{
+				QueueBuffer[FreeIndex++] = ObjectToAdd;
+				FreeIndex %= ARRAYCOUNT(QueueBuffer);
+			}
+		}
 	}
 	return (Result);
 }
@@ -92,12 +130,70 @@ JsonSimplifiedObjectPrint(simplified_json_object *Object)
 	}
 }
 
+internal void
+JsonSimplifiedObjectFormattedPrint(simplified_json_object *Object, u32 IndentationLevel)
+{
+	assert(Object);
+	for (u32 IndentationIndex = 0; IndentationIndex < IndentationLevel; ++IndentationIndex) { printf("  "); }
+
+	if (Object->Name)
+	{
+		printf("%s: ", Object->Name);
+	}
+
+	switch (Object->DataType)
+	{
+		case SIMPLIFIED_JSON_OBJECT_DATA_TYPE_NULL: {
+			printf("null");
+		} break;
+
+		case SIMPLIFIED_JSON_OBJECT_DATA_TYPE_STRING: {
+			printf("%s", (char *)Object->Data);
+		} break;
+
+		case SIMPLIFIED_JSON_OBJECT_DATA_TYPE_OBJECT_OR_ARRAY: {
+			printf("{\n");
+			JsonSimplifiedObjectFormattedPrint(Object->Data, IndentationLevel+1);
+			printf("\n");
+			for (u32 IndentationIndex = 0; IndentationIndex < IndentationLevel; ++IndentationIndex) { printf("  "); }
+			printf("}");
+		} break;
+
+		case SIMPLIFIED_JSON_OBJECT_DATA_TYPE_BOOLEAN32: {
+			b32 Value = *(b32 *)Object->Data;
+			if (Value)
+			{
+				printf("true");
+			}
+			else
+			{
+				printf("false");
+			}
+		} break;
+		
+		default: { assert(!"Unknown json object type"); } break;
+	}
+	
+	if (Object->Next)
+	{
+		printf(",\n");
+		JsonSimplifiedObjectFormattedPrint(Object->Next, IndentationLevel);
+	}
+}
+
+internal void
+JsonSkipWhitespace(char **JsonToParse)
+{
+	while (**JsonToParse == ' ') { *JsonToParse += 1; }
+}
+
 internal char *
 JsonParseString(char **JsonToParse, u8 **MemoryToUse)
 {
 	//fprintf(stderr, "PARSING STRING: %.*s\n", 64, *JsonToParse);
 	assert(**JsonToParse == '"');
 	*JsonToParse += 1;
+	JsonSkipWhitespace(JsonToParse);
 
 	char *Result = (char *)*MemoryToUse;
 	u32 StringLength = 0;
@@ -129,6 +225,10 @@ JsonParseString(char **JsonToParse, u8 **MemoryToUse)
 					// TODO(Felix): 
 				} break;
 				
+				case '/': {
+					// TODO(Felix): 
+				} break;
+				
 				default: { 
 					fprintf(stderr, "%c: ", **JsonToParse);
 					assert(!"Unexpected escaped char");
@@ -157,6 +257,7 @@ JsonParseValue(char **JsonToParse, u8 **MemoryToUse, simplified_json_object_data
 	//fprintf(stderr, "PARSING VALUE: %.*s\n", 64, *JsonToParse);
 	void *ReturnValue = 0;
 	*ResultType = SIMPLIFIED_JSON_OBJECT_DATA_TYPE_NULL;
+	JsonSkipWhitespace(JsonToParse);
 
 	if (**JsonToParse == '"')
 	{
@@ -164,17 +265,18 @@ JsonParseValue(char **JsonToParse, u8 **MemoryToUse, simplified_json_object_data
 		*ResultType = SIMPLIFIED_JSON_OBJECT_DATA_TYPE_STRING;
 		ReturnValue = JsonParseString(JsonToParse, MemoryToUse);
 	}
-	else if (isdigit(**JsonToParse))
+	else if (isdigit(**JsonToParse) || **JsonToParse == '-') // Negative
 	{
 		// We'll copy that number over (as a string)
 		*ResultType = SIMPLIFIED_JSON_OBJECT_DATA_TYPE_STRING;
 		char *ResultString = (char *)*MemoryToUse;
 		u32 ResultStringLength = 0;
-		while (isdigit(**JsonToParse)) 
+		while (isdigit(**JsonToParse) || 
+			   **JsonToParse == '.'   || // floating point
+			   **JsonToParse == '-')  // Negative number
 		{ 
 			ResultString[ResultStringLength++] = **JsonToParse;
-			*JsonToParse += 1;
-		}
+			*JsonToParse += 1; }
 		ResultString[ResultStringLength++] = 0; // 0 Terminate
 		ReturnValue = ResultString;
 		*MemoryToUse = (void *)&ResultString[ResultStringLength];
@@ -220,6 +322,7 @@ JsonParseValue(char **JsonToParse, u8 **MemoryToUse, simplified_json_object_data
 		assert(!"Unexpected json value");
 	}
 	
+	JsonSkipWhitespace(JsonToParse);
 	return (ReturnValue);
 }
 
@@ -228,11 +331,13 @@ JsonParseObject(char **JsonToParse, u8 **MemoryToUse)
 {
 	//fprintf(stderr, "PARSING OBJECT: %.*s\n", 64, *JsonToParse);
 	assert(**JsonToParse == '{');
+	*JsonToParse += 1;
+	JsonSkipWhitespace(JsonToParse);
+
 	simplified_json_object *Result = (void *)*MemoryToUse;
 	*Result = (simplified_json_object ){ 0 };
 	*MemoryToUse = (void *)(Result+1);
 	
-	*JsonToParse += 1;
 	if (**JsonToParse == '}')
 	{
 		// Object is empty
@@ -251,6 +356,7 @@ JsonParseObject(char **JsonToParse, u8 **MemoryToUse)
 		{
 			assert(**JsonToParse == ',');
 			*JsonToParse += 1;
+			JsonSkipWhitespace(JsonToParse);
 
 			*ToFill = (simplified_json_object *)*MemoryToUse;
 			**ToFill = (simplified_json_object){ 0 };
@@ -275,6 +381,7 @@ JsonParseArray(char **JsonToParse, u8 **MemoryToUse)
 	//fprintf(stderr, "PARSING ARRAY: %.*s\n", 64, *JsonToParse);
 	assert(**JsonToParse == '[');
 	*JsonToParse += 1;
+	JsonSkipWhitespace(JsonToParse);
 
 	simplified_json_object *Result = (void *)*MemoryToUse;
 	*Result = (simplified_json_object ){ 0 };
