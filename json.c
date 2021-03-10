@@ -154,7 +154,6 @@ JsonSimplifiedObjectFormattedPrint(simplified_json_object *Object, u32 Indentati
 		case SIMPLIFIED_JSON_OBJECT_DATA_TYPE_OBJECT_OR_ARRAY: {
 			printf("{\n");
 			JsonSimplifiedObjectFormattedPrint(Object->Data, IndentationLevel+1);
-			printf("\n");
 			for (u32 IndentationIndex = 0; IndentationIndex < IndentationLevel; ++IndentationIndex) { printf("  "); }
 			printf("}");
 		} break;
@@ -178,6 +177,10 @@ JsonSimplifiedObjectFormattedPrint(simplified_json_object *Object, u32 Indentati
 	{
 		printf(",\n");
 		JsonSimplifiedObjectFormattedPrint(Object->Next, IndentationLevel);
+	}
+	else
+	{
+		printf("\n");
 	}
 }
 
@@ -207,28 +210,34 @@ JsonParseString(char **JsonToParse, u8 **MemoryToUse)
 			{
 				case '"': {
 					// TODO(Felix): 
+					*JsonToParse += 1;
 				} break;
-				
+
 				case '\\': {
 					// TODO(Felix): 
+					*JsonToParse += 1;
 				} break;
-				
+
 				case 'n': {
 					// TODO(Felix): 
+					*JsonToParse += 1;
 				} break;
-				
+
 				case 't': {
 					// TODO(Felix): 
+					*JsonToParse += 1;
 				} break;
-				
+
 				case 'u': {
 					// TODO(Felix): 
+					*JsonToParse += 1;
 				} break;
-				
+
 				case '/': {
 					// TODO(Felix): 
+					*JsonToParse += 1;
 				} break;
-				
+
 				default: { 
 					fprintf(stderr, "%c: ", **JsonToParse);
 					assert(!"Unexpected escaped char");
