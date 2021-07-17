@@ -59,3 +59,5 @@ typedef intptr_t   imm;
 #define ABS(a)   ((a) >  0  ? (a) : -(a))
 #define SIGN(a)  ((a) >  0  ?  1  :  ((a) < 0 ? -1 : 0))
 #define CLAMP(min,a,max) MIN((max), MAX((min), (a)))
+#define CLAMP_TOP(a,b) MIN((a),(b))
+#define CLAMP_BOTTOM(a,b) MAX((a),(b))
